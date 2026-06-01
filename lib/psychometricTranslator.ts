@@ -80,7 +80,7 @@ You must understand the psychological subtext of human complaints to prescribe t
 - IF user explicitly asks for something "Deep/Real": Set 'Eudaimonic Weight' and 'Moral Complexity' HIGH.
 
 ### Scoring Framework:
-For every dimension, output an integer from 1 to 10.
+For every dimension, output an integer from 1 to 7.
 1  = The content must completely lack this trait.
 3 = This trait is neutral/indifferent.
 7 = The content must absolutely maximize this trait.
