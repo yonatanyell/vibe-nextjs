@@ -134,19 +134,16 @@ const RESPONSE_SCHEMA = {
   },
 } as const;
 
-type OpenAIResponseContent = {
-  type?: string;
+type GeminiResponsePart = {
   text?: string;
 };
 
-type OpenAIResponseItem = {
-  type?: string;
-  content?: OpenAIResponseContent[];
-};
-
-type OpenAIResponse = {
-  output_text?: string;
-  output?: OpenAIResponseItem[];
+type GeminiResponse = {
+  candidates?: {
+    content?: {
+      parts?: GeminiResponsePart[];
+    };
+  }[];
   error?: {
     message?: string;
   };
@@ -189,13 +186,10 @@ export function validatePsychometricTranslation(value: unknown): PsychometricTra
   };
 }
 
-function extractOutputText(response: OpenAIResponse): string {
-  if (response.output_text) return response.output_text;
-
-  const text = response.output
-    ?.flatMap((item) => item.content ?? [])
-    .filter((content) => content.type === "output_text" || typeof content.text === "string")
-    .map((content) => content.text ?? "")
+function extractOutputText(response: GeminiResponse): string {
+  const text = response.candidates
+    ?.flatMap((candidate) => candidate.content?.parts ?? [])
+    .map((part) => part.text ?? "")
     .join("");
 
   if (!text) {
@@ -206,9 +200,9 @@ function extractOutputText(response: OpenAIResponse): string {
 }
 
 export async function translatePromptToTraitVector(prompt: string): Promise<PsychometricTranslation> {
-  const apiKey = process.env.OPENAI_API_KEY;
+  const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
-    throw new PsychometricTranslationError("OPENAI_API_KEY is not configured.", 503);
+    throw new PsychometricTranslationError("GEMINI_API_KEY is not configured.", 503);
   }
 
   const cleanPrompt = prompt.trim();
@@ -216,38 +210,44 @@ export async function translatePromptToTraitVector(prompt: string): Promise<Psyc
     throw new PsychometricTranslationError("Prompt is required.", 400);
   }
 
-  const model = process.env.OPENAI_TRAIT_MODEL || "gpt-5.5";
-  const response = await fetch("https://api.openai.com/v1/responses", {
+  const model = process.env.GEMINI_TRAIT_MODEL || "gemini-3.5-flash";
+  const url = new URL(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`);
+  url.searchParams.set("key", apiKey);
+
+  const response = await fetch(url, {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${apiKey}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model,
-      input: [
-        { role: "system", content: SYSTEM_PROMPT },
-        { role: "user", content: cleanPrompt },
+      systemInstruction: {
+        parts: [{ text: SYSTEM_PROMPT }],
+      },
+      contents: [
+        {
+          role: "user",
+          parts: [{ text: cleanPrompt }],
+        },
       ],
-      max_output_tokens: 700,
-      text: {
-        format: {
-          type: "json_schema",
-          name: "psychometric_trait_vector",
-          strict: true,
-          schema: RESPONSE_SCHEMA,
+      generationConfig: {
+        maxOutputTokens: 700,
+        responseFormat: {
+          text: {
+            mimeType: "application/json",
+            schema: RESPONSE_SCHEMA,
+          },
         },
       },
     }),
   });
 
-  const payload = (await response.json().catch(() => null)) as OpenAIResponse | null;
+  const payload = (await response.json().catch(() => null)) as GeminiResponse | null;
   if (!response.ok) {
-    throw new PsychometricTranslationError(payload?.error?.message || "OpenAI trait translation failed.", response.status);
+    throw new PsychometricTranslationError(payload?.error?.message || "Gemini trait translation failed.", response.status);
   }
 
   if (!payload) {
-    throw new PsychometricTranslationError("OpenAI returned an empty response.");
+    throw new PsychometricTranslationError("Gemini returned an empty response.");
   }
 
   const parsed = JSON.parse(extractOutputText(payload)) as unknown;
