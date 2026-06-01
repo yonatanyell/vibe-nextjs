@@ -199,6 +199,25 @@ function extractOutputText(response: GeminiResponse): string {
   return text;
 }
 
+function parseModelJson(text: string): unknown {
+  const trimmed = text.trim();
+  const withoutFence = trimmed
+    .replace(/^```(?:json)?\s*/i, "")
+    .replace(/\s*```$/i, "")
+    .trim();
+
+  try {
+    return JSON.parse(withoutFence) as unknown;
+  } catch {
+    const start = withoutFence.indexOf("{");
+    const end = withoutFence.lastIndexOf("}");
+    if (start >= 0 && end > start) {
+      return JSON.parse(withoutFence.slice(start, end + 1)) as unknown;
+    }
+    throw new PsychometricTranslationError("The model response was not valid JSON.");
+  }
+}
+
 export async function translatePromptToTraitVector(prompt: string): Promise<PsychometricTranslation> {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
@@ -230,13 +249,9 @@ export async function translatePromptToTraitVector(prompt: string): Promise<Psyc
         },
       ],
       generationConfig: {
-        maxOutputTokens: 700,
-        responseFormat: {
-          text: {
-            mimeType: "application/json",
-            schema: RESPONSE_SCHEMA,
-          },
-        },
+        maxOutputTokens: 1400,
+        response_mime_type: "application/json",
+        response_json_schema: RESPONSE_SCHEMA,
       },
     }),
   });
@@ -250,6 +265,8 @@ export async function translatePromptToTraitVector(prompt: string): Promise<Psyc
     throw new PsychometricTranslationError("Gemini returned an empty response.");
   }
 
-  const parsed = JSON.parse(extractOutputText(payload)) as unknown;
+  const outputText = extractOutputText(payload);
+  console.log(`[traits] raw model output ${outputText}`);
+  const parsed = parseModelJson(outputText);
   return validatePsychometricTranslation(parsed);
 }
