@@ -5,7 +5,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Bookmark, BookmarkCheck, Check, ChevronLeft, Eye, EyeOff, Sparkles, X } from "lucide-react";
 import { VibeHeader } from "@/components/VibeHeader";
 import { actions, type Recommendation, useVibe } from "@/lib/store";
-import { aiResponseFor, recommend, REFINEMENT_CHIPS } from "@/lib/mockAi";
+import { recommend, REFINEMENT_CHIPS } from "@/lib/mockAi";
+import type { PsychometricTranslation } from "@/lib/psychometricTranslator";
 
 export function RecommendationsClient() {
   const router = useRouter();
@@ -13,7 +14,8 @@ export function RecommendationsClient() {
   const q = params.get("q") ?? "";
   const vibe = useVibe();
   const recs = useMemo(() => recommend(q), [q]);
-  const aiText = useMemo(() => aiResponseFor(q), [q]);
+  const [translation, setTranslation] = useState<PsychometricTranslation | null>(null);
+  const [translationError, setTranslationError] = useState<string | null>(null);
   const [index, setIndex] = useState(0);
   const [refineOpen, setRefineOpen] = useState(false);
   const scrollerRef = useRef<HTMLDivElement>(null);
@@ -21,6 +23,36 @@ export function RecommendationsClient() {
   useEffect(() => {
     if (!vibe.authed) router.replace("/");
   }, [router, vibe.authed]);
+
+  useEffect(() => {
+    const prompt = q.trim();
+    if (!prompt) {
+      setTranslation(null);
+      setTranslationError(null);
+      return;
+    }
+
+    const controller = new AbortController();
+    setTranslation(null);
+    setTranslationError(null);
+
+    fetch("/api/traits", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ prompt }),
+      signal: controller.signal,
+    })
+      .then(async (response) => {
+        const payload = await response.json();
+        if (!response.ok) throw new Error(payload?.error || "Could not translate prompt.");
+        setTranslation(payload as PsychometricTranslation);
+      })
+      .catch((error) => {
+        if (error.name !== "AbortError") setTranslationError(error.message);
+      });
+
+    return () => controller.abort();
+  }, [q]);
 
   const onScroll = () => {
     const el = scrollerRef.current;
@@ -52,7 +84,16 @@ export function RecommendationsClient() {
         <button onClick={() => setRefineOpen(true)} className="glass w-full rounded-2xl px-4 py-3 text-left animate-in-up">
           <div className="flex items-start gap-2.5">
             <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-            <p className="text-[13.5px] leading-snug text-foreground/90">{aiText}</p>
+            <div className="min-w-0 flex-1">
+              <p className="text-[13.5px] leading-snug text-foreground/90">
+                {translation?.rationale || translationError || "Reading the psychological shape of that prompt..."}
+              </p>
+              {translation && (
+                <p className="mt-2 break-words font-mono text-[10px] leading-relaxed text-muted-foreground">
+                  [{translation.vector.join(", ")}]
+                </p>
+              )}
+            </div>
           </div>
         </button>
       </div>
