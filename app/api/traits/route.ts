@@ -13,9 +13,11 @@ export async function POST(request: Request) {
   }
 
   const prompt = typeof (body as { prompt?: unknown }).prompt === "string" ? (body as { prompt: string }).prompt : "";
+  console.log("[traits] user prompt", { prompt });
 
   try {
     const translation = await translatePromptToTraitVector(prompt);
+    console.log("[traits] generated translation", translation);
     return NextResponse.json(translation);
   } catch (error) {
     if (error instanceof PsychometricTranslationError) {
