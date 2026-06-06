@@ -6,6 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "build:israel-catalog": "node scripts/build_streaming_israel_catalog.mjs",
+    "build:external-ranked-israel-catalog": "node scripts/build_external_ranked_israel_catalog.mjs",
+    "build:justwatch-israel-catalog": "node scripts/build_justwatch_israel_catalog.mjs",
     "lint": "next lint"
   },
   "dependencies": {
