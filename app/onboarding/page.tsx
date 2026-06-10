@@ -4,17 +4,12 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Check } from "lucide-react";
 import { actions, useVibe } from "@/lib/store";
-
-const GROUPS = [
-  { title: "TV & Movies", subtitle: "Where you stream", items: ["Netflix", "HBO Max", "Disney+", "Apple TV+", "Prime Video", "Hulu"] },
-  { title: "Podcasts", subtitle: "How you listen", items: ["Spotify", "Apple Podcasts", "Pocket Casts", "YouTube"] },
-  { title: "Books", subtitle: "Where you read", items: ["Kindle Unlimited", "Audible", "Apple Books", "Libby"] },
-];
+import { canonicalFilterPlatformLabels, PLATFORM_GROUPS } from "@/lib/platforms";
 
 export default function OnboardingPage() {
   const router = useRouter();
   const vibe = useVibe();
-  const [picked, setPicked] = useState<Set<string>>(new Set(vibe.services));
+  const [picked, setPicked] = useState<Set<string>>(new Set(canonicalFilterPlatformLabels(vibe.services)));
 
   useEffect(() => {
     if (!vibe.authed) router.replace("/");
@@ -29,7 +24,7 @@ export default function OnboardingPage() {
     });
 
   const finish = (services: string[]) => {
-    actions.setServices(services);
+    actions.setServices(canonicalFilterPlatformLabels(services));
     router.replace("/discover");
   };
 
@@ -51,7 +46,7 @@ export default function OnboardingPage() {
         </p>
 
         <div className="mt-10 space-y-9">
-          {GROUPS.map((group) => (
+          {PLATFORM_GROUPS.map((group) => (
             <section key={group.title} className="animate-in-up">
               <div className="flex items-baseline justify-between">
                 <h2 className="font-display text-lg font-semibold">{group.title}</h2>

@@ -1,7 +1,22 @@
 import { NextResponse } from "next/server";
-import { PsychometricTranslationError, translatePromptToTraitVector } from "@/lib/psychometricTranslator";
+import { analyzePrompt, PsychometricTranslationError } from "@/lib/psychometricTranslator";
 
 export const runtime = "nodejs";
+
+function errorSummary(error: unknown) {
+  if (error instanceof Error) {
+    return {
+      name: error.name,
+      message: error.message,
+      stack: error.stack,
+    };
+  }
+
+  return {
+    name: typeof error,
+    message: String(error),
+  };
+}
 
 export async function POST(request: Request) {
   let body: unknown;
@@ -16,15 +31,32 @@ export async function POST(request: Request) {
   console.log(`[traits] user prompt ${JSON.stringify({ prompt })}`);
 
   try {
-    const translation = await translatePromptToTraitVector(prompt);
-    console.log(`[traits] generated translation ${JSON.stringify(translation)}`);
-    return NextResponse.json(translation);
+    const analysis = await analyzePrompt(prompt);
+    console.log(`[traits] computed prompt vector ${JSON.stringify({ prompt, vector: analysis.vector })}`);
+    console.log(`[traits] extracted prompt constraints ${JSON.stringify({ prompt, constraints: analysis.constraints })}`);
+    console.log(`[traits] computed prompt weights ${JSON.stringify({ prompt, traitWeights: analysis.traitWeights })}`);
+    console.log(`[traits] generated analysis ${JSON.stringify(analysis)}`);
+    return NextResponse.json(analysis);
   } catch (error) {
     if (error instanceof PsychometricTranslationError) {
+      console.error(
+        `[traits] failed ${JSON.stringify({
+          prompt,
+          status: error.status,
+          message: error.message,
+          details: error.details,
+          error: errorSummary(error),
+        })}`,
+      );
       return NextResponse.json({ error: error.message }, { status: error.status });
     }
 
-    console.error("[traits] unexpected error", error);
+    console.error(
+      `[traits] unexpected failure ${JSON.stringify({
+        prompt,
+        error: errorSummary(error),
+      })}`,
+    );
     return NextResponse.json({ error: "Unexpected trait translation failure." }, { status: 500 });
   }
 }

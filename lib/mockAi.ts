@@ -1,4 +1,5 @@
 import type { Recommendation } from "./store";
+import { applyRecommendationFilters, type RecommendationFilters } from "./filters";
 
 const POSTERS = {
   dusk: "linear-gradient(135deg,#3b2a5a 0%,#7a4a8c 45%,#e3a7c8 100%)",
@@ -27,6 +28,7 @@ export const LIBRARY: Recommendation[] = [
       { source: "Google", value: "96%" },
     ],
     length: "4 seasons - 39 episodes",
+    durationMinutes: 60,
     tags: ["sharp", "ambitious", "dialogue-driven"],
     why: "Built around the kind of cutting, intelligent dialogue and ambitious characters you tend to gravitate toward.",
     summary: "A media dynasty fractures as a fading patriarch's children scheme for the throne - wickedly funny, brutally human.",
@@ -48,6 +50,7 @@ export const LIBRARY: Recommendation[] = [
       { source: "Google", value: "93%" },
     ],
     length: "2 seasons - 22 episodes",
+    durationMinutes: 30,
     tags: ["warm", "witty", "emotionally honest"],
     why: "Balances depth with warmth - a softer landing for the same emotional intelligence you love in heavier dramas.",
     summary: "A grieving therapist starts breaking the rules with his patients - and starts living again in the process.",
@@ -67,6 +70,7 @@ export const LIBRARY: Recommendation[] = [
       { source: "Spotify", value: "4.7" },
     ],
     length: "Avg. 35 min - weekly",
+    durationMinutes: 35,
     tags: ["smart", "ambitious", "current"],
     why: "Three professors unpack the week with the kind of curious, ambitious lens you reach for when you want to feel sharper.",
     summary: "A weekly conversation about business, tech and the forces shaping how we work.",
@@ -87,6 +91,7 @@ export const LIBRARY: Recommendation[] = [
       { source: "Google", value: "4.5" },
     ],
     length: "352 pages - ~10h audiobook",
+    durationMinutes: 600,
     tags: ["intense", "cerebral", "page-turner"],
     why: "Cerebral, propulsive, and quietly emotional - the sweet spot you gravitate toward late at night.",
     summary: "A physicist is abducted into a life that isn't his and must claw his way back to the family he loves.",
@@ -108,6 +113,7 @@ export const LIBRARY: Recommendation[] = [
       { source: "Google", value: "95%" },
     ],
     length: "3 seasons - 28 episodes",
+    durationMinutes: 30,
     tags: ["intense", "tender", "character-driven"],
     why: "Tense and tender at once - chaotic energy with genuine warmth underneath.",
     summary: "A young chef returns to Chicago to run his late brother's sandwich shop and the family it has become.",
@@ -127,6 +133,7 @@ export const LIBRARY: Recommendation[] = [
       { source: "Spotify", value: "4.8" },
     ],
     length: "Avg. 2h - weekly",
+    durationMinutes: 120,
     tags: ["scientific", "deep", "actionable"],
     why: "Deep-dive science with practical takeaways - perfect for a long drive and a curious mood.",
     summary: "A Stanford neuroscientist explores how biology shapes performance, mood and health.",
@@ -147,6 +154,7 @@ export const LIBRARY: Recommendation[] = [
       { source: "Google", value: "4.3" },
     ],
     length: "266 pages - ~7h audiobook",
+    durationMinutes: 420,
     tags: ["emotional", "quiet", "intimate"],
     why: "Quietly emotional with intelligent dialogue - the kind of intimacy you tend to save for tonight.",
     summary: "Two young people in Ireland keep finding their way back to each other across the years.",
@@ -168,6 +176,7 @@ export const LIBRARY: Recommendation[] = [
       { source: "Google", value: "92%" },
     ],
     length: "1h 45m",
+    durationMinutes: 105,
     tags: ["tender", "reflective", "romantic"],
     why: "Reflective and emotionally generous - exactly the calm depth you asked for.",
     summary: "Two childhood friends reunite in New York twenty years on, and weigh the lives they didn't choose.",
@@ -189,6 +198,7 @@ export const LIBRARY: Recommendation[] = [
       { source: "Google", value: "97%" },
     ],
     length: "3 seasons - 34 episodes",
+    durationMinutes: 35,
     tags: ["comforting", "warm", "uplifting"],
     why: "A reliable mood-lift - warmth with just enough wit to feel grown-up.",
     summary: "An American football coach is hired to manage an English Premier League team. He has no idea about football.",
@@ -198,7 +208,7 @@ export const LIBRARY: Recommendation[] = [
   },
 ];
 
-function pickIds(prompt: string): string[] {
+function rankedRecommendations(prompt: string): Recommendation[] {
   const p = prompt.toLowerCase();
   const score = (rec: Recommendation) => {
     let s = 0;
@@ -217,13 +227,14 @@ function pickIds(prompt: string): string[] {
     if (/shrinking/.test(p) && (rec.id === "tedlasso" || rec.id === "pastlives")) s += 4;
     return s;
   };
-  return [...LIBRARY].sort((a, b) => score(b) - score(a)).slice(0, 3).map((r) => r.id);
+  return [...LIBRARY].sort((a, b) => score(b) - score(a));
 }
 
-export function recommend(prompt: string): Recommendation[] {
-  return pickIds(prompt || "")
-    .map((id) => LIBRARY.find((r) => r.id === id))
-    .filter(Boolean) as Recommendation[];
+export function recommend(prompt: string, filters: RecommendationFilters = {}): Recommendation[] {
+  const ranked = rankedRecommendations(prompt || "");
+  const filtered = applyRecommendationFilters(ranked, filters);
+  const typeFiltered = filters.types?.length ? applyRecommendationFilters(ranked, { types: filters.types }) : ranked;
+  return (filtered.length ? filtered : typeFiltered).slice(0, 3);
 }
 
 export function aiResponseFor(prompt: string): string {

@@ -1,0 +1,136 @@
+{
+  "results": [
+    {
+      "id": 1,
+      "prompt": "I want something funny and light that moves fast, ideally not too long.",
+      "weightRationale": "The user seeks fast-paced, lighthearted, and funny content. Therefore, Hedonic Pleasure and Narrative Velocity are highly weighted, while Cognitive Load, Comfort, and Distress are also weighted to ensure the recommendation remains low-stress and easy to consume.",
+      "weights": [
+        5,
+        7,
+        0,
+        3,
+        5,
+        4,
+        7,
+        1,
+        1,
+        3,
+        2,
+        0,
+        0,
+        0,
+        1
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Recommend a movie or show that is deep, morally complex, and gives me a lot to think about afterward.",
+      "weightRationale": "The user explicitly requests a 'deep' and 'morally complex' experience that leaves them with 'a lot to think about,' which heavily weights Eudaimonic Weight, Moral Complexity, and Cognitive Load.",
+      "weights": [
+        6,
+        1,
+        7,
+        2,
+        1,
+        3,
+        1,
+        4,
+        1,
+        1,
+        0,
+        7,
+        3,
+        2,
+        3
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "I need something cozy and comforting tonight, but definitely not scary or stressful.",
+      "weightRationale": "The user is explicitly seeking comfort and avoiding stress or fear, making Comfort and Emotional Safety and Distress and Unease the dominant traits for filtering. Hedonic Pleasure, Affective Arousal, and Relational Warmth are also highly important to ensure a cozy, low-stress experience.",
+      "weights": [
+        1,
+        5,
+        0,
+        5,
+        7,
+        7,
+        1,
+        1,
+        2,
+        4,
+        3,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Find me something educational but still entertaining, like I learn things without feeling like I’m watching homework.",
+      "weightRationale": "The user seeks educational content that is highly engaging, making Informational Utility and Hedonic Pleasure the primary drivers, while Cognitive Load is also heavily weighted to ensure the material feels accessible and light rather than academic.",
+      "weights": [
+        5,
+        6,
+        2,
+        1,
+        2,
+        0,
+        2,
+        4,
+        1,
+        2,
+        3,
+        0,
+        0,
+        7,
+        1
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "I’m looking for a really immersive world I can get lost in for a few evenings.",
+      "weightRationale": "The user specifically requests an immersive world to get lost in over several evenings, making Immersive Texture the dominant trait, while Curiosity and Mystery and Parasocial / Hangout Appeal are highly weighted to support deep exploration and multi-session engagement.",
+      "weights": [
+        2,
+        3,
+        1,
+        2,
+        2,
+        1,
+        4,
+        5,
+        7,
+        2,
+        4,
+        1,
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "id": 6,
+      "prompt": "Give me a mystery that actually keeps me guessing, but doesn’t get too confusing.",
+      "weightRationale": "The user explicitly demands a compelling mystery ('keeps me guessing'), making Curiosity and Mystery the dominant trait, while also placing a strict limit on complexity ('not too confusing'), which requires a high weight on Cognitive Load.",
+      "weights": [
+        6,
+        1,
+        0,
+        3,
+        1,
+        1,
+        2,
+        7,
+        1,
+        0,
+        0,
+        1,
+        1,
+        0,
+        0
+      ]
+    }
+  ]
+}

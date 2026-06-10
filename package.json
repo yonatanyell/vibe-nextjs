@@ -9,9 +9,13 @@
     "build:israel-catalog": "node scripts/build_streaming_israel_catalog.mjs",
     "build:external-ranked-israel-catalog": "node scripts/build_external_ranked_israel_catalog.mjs",
     "build:justwatch-israel-catalog": "node scripts/build_justwatch_israel_catalog.mjs",
-    "lint": "next lint"
+    "import:mvp-csv": "node scripts/import_mvp_csv_tables.mjs",
+    "test": "node tests/psychometric-scale-regression.mjs && node tests/constraint-resolution-regression.mjs && node tests/filtering-e2e.mjs",
+    "test:psychometric-scale": "node tests/psychometric-scale-regression.mjs",
+    "lint": "eslint ."
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.107.0",
     "clsx": "latest",
     "lucide-react": "latest",
     "next": "latest",

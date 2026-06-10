@@ -17,4 +17,4 @@ The package uses `next@latest`, `react@latest`, and `react-dom@latest` so instal
 - App Router pages live in `app/`.
 - Local mock state is still stored in `localStorage`.
 - Mock recommendation data is still in `lib/mockAi.ts`.
-- Prompt-to-trait translation now runs through `POST /api/traits`, which calls the Gemini API with structured JSON output. Set `GEMINI_API_KEY` before running the app. Override the default model with `GEMINI_TRAIT_MODEL` if needed.
+- Prompt analysis now runs through `POST /api/traits`, which calls the Gemini API with structured JSON output for trait scores, prompt constraints, and trait weights. Set `GEMINI_API_KEY` before running the app. Override the default model with `GEMINI_TRAIT_MODEL`, `GEMINI_CONSTRAINT_MODEL`, or `GEMINI_TRAIT_WEIGHT_MODEL` if needed.

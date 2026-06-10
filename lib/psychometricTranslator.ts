@@ -1,26 +1,83 @@
 export const TRAIT_COUNT = 15;
+export const TRAIT_SCORE_MIN = 1;
+export const TRAIT_SCORE_MAX = 7;
+export const TRAIT_SCORE_VALUES = [1, 2, 3, 4, 5, 6, 7] as const;
+export const TRAIT_WEIGHT_MIN = 0;
+export const TRAIT_WEIGHT_MAX = 7;
+export const TRAIT_WEIGHT_VALUES = [0, 1, 2, 3, 4, 5, 6, 7] as const;
+
+export type TraitScore = (typeof TRAIT_SCORE_VALUES)[number];
+export type TraitWeight = (typeof TRAIT_WEIGHT_VALUES)[number];
 
 export type TraitVector = [
-  number,
-  number,
-  number,
-  number,
-  number,
-  number,
-  number,
-  number,
-  number,
-  number,
-  number,
-  number,
-  number,
-  number,
-  number,
+  TraitScore,
+  TraitScore,
+  TraitScore,
+  TraitScore,
+  TraitScore,
+  TraitScore,
+  TraitScore,
+  TraitScore,
+  TraitScore,
+  TraitScore,
+  TraitScore,
+  TraitScore,
+  TraitScore,
+  TraitScore,
+  TraitScore,
+];
+
+export type TraitWeightsVector = [
+  TraitWeight,
+  TraitWeight,
+  TraitWeight,
+  TraitWeight,
+  TraitWeight,
+  TraitWeight,
+  TraitWeight,
+  TraitWeight,
+  TraitWeight,
+  TraitWeight,
+  TraitWeight,
+  TraitWeight,
+  TraitWeight,
+  TraitWeight,
+  TraitWeight,
 ];
 
 export type PsychometricTranslation = {
   rationale: string;
   vector: TraitVector;
+};
+
+export type TraitWeighting = {
+  weightRationale: string;
+  weights: TraitWeightsVector;
+};
+
+export type PromptMediaType = "show" | "movie" | "podcast" | "book";
+
+export type PromptTimeLimit = {
+  mentioned: boolean;
+  rawText: string;
+  minMinutes?: number;
+  maxMinutes?: number;
+};
+
+export type PromptConstraints = {
+  mediaTypes: PromptMediaType[];
+  timeLimit: PromptTimeLimit;
+  platforms: string[];
+  languages: string[];
+  genres: string[];
+  moods: string[];
+  exclusions: string[];
+  otherConstraints: string[];
+};
+
+export type PromptAnalysis = PsychometricTranslation & {
+  constraints: PromptConstraints;
+  traitWeights: TraitWeighting;
 };
 
 const SYSTEM_PROMPT = `You are the core psychometric translation engine for an advanced media recommendation system. Your role is to convert a user's natural language input (describing their current mood, day, emotional state, or explicit watch desires) into a structured, 15-dimensional numeric vector. This vector represents the IDEAL target content to serve them.
@@ -80,10 +137,10 @@ You must understand the psychological subtext of human complaints to prescribe t
 - IF user explicitly asks for something "Deep/Real": Set 'Eudaimonic Weight' and 'Moral Complexity' HIGH.
 
 ### Scoring Framework:
-For every dimension, output an integer from 1 to 7.
-1  = The content must completely lack this trait.
+For every dimension, output an integer from ${TRAIT_SCORE_MIN} to ${TRAIT_SCORE_MAX}.
+${TRAIT_SCORE_MIN}  = The content must completely lack this trait.
 3 = This trait is neutral/indifferent.
-7 = The content must absolutely maximize this trait.
+${TRAIT_SCORE_MAX} = The content must absolutely maximize this trait.
 
 ### Output Format:
 You must respond ONLY with a valid JSON object. Do not include markdown formatting like \`\`\`json ... \`\`\` in the raw string, do not include any conversational filler, intro, or outro text.
@@ -110,7 +167,94 @@ Expected JSON Schema:
   ]
 }`;
 
-const SCORE_VALUES = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+const CONSTRAINT_EXTRACTION_PROMPT = `You extract explicit recommendation constraints from a user's natural-language prompt.
+
+Only extract constraints that the user directly states or strongly implies in the prompt text. Do not infer preferences from mood alone.
+
+Constraint rules:
+- mediaTypes: normalize explicit desired entertainment types to "show", "movie", "podcast", or "book". Include multiple values when the user allows alternatives. Leave empty if no type is stated.
+- timeLimit: capture any explicit duration, length, episode length, runtime, commute length, or available-time constraint. Convert to minutes when possible. Use maxMinutes for "under", "shorter than", "no more than", or an exact upper bound. Use minMinutes for "at least", "long", or lower-bound requests. Keep the user's original phrase in rawText. If no time constraint is stated, set mentioned false and rawText to an empty string.
+- platforms: streaming, reading, listening, or availability services the user names.
+- languages: requested languages or subtitle/dubbing constraints.
+- genres: named genres, subgenres, formats, or content categories such as comedy, thriller, documentary, romance, self-help, interview, or true crime.
+- moods: explicit mood/tone constraints for the recommendation itself, such as cozy, scary, funny, deep, light, uplifting, dark, or family-friendly.
+- exclusions: things the user explicitly rejects or wants to avoid.
+- otherConstraints: any other concrete explicit constraints, such as age rating, release era, audience, cast/creator, country, spoiler constraints, or "not too popular".
+
+Return only valid JSON. Do not include markdown or commentary.`;
+
+const TRAIT_WEIGHT_PROMPT = `You are the trait-importance weighting engine for a media recommendation system.
+
+Your task is to read ONLY the user's natural-language prompt and produce a 15-dimensional weights vector. These weights say how important each psychological trait should be when matching recommendations for this specific prompt.
+
+This is NOT the same as scoring the desired content.
+- Trait scores answer: "How much of this trait should the recommended item have?"
+- Trait weights answer: "How much should this trait matter in the similarity calculation?"
+
+For example:
+- "I want something funny, light, and fast-paced" should strongly weight Hedonic Pleasure, Comfort and Emotional Safety / low Distress and Unease, and Narrative Velocity. Most other traits should receive low weights.
+- "Something deep and morally complicated" should strongly weight Eudaimonic Weight and Moral Complexity.
+- "Nothing scary, I need comfort tonight" should strongly weight Comfort and Emotional Safety and Distress and Unease, because avoiding distress is important.
+- "Surprise me" or very vague prompts should use low-confidence, weak-prior weights rather than pretending every trait is equally important.
+
+### The 15 Psychometric Dimensions:
+1. Cognitive Load
+2. Hedonic Pleasure
+3. Eudaimonic Weight
+4. Affective Arousal
+5. Comfort and Emotional Safety
+6. Distress and Unease
+7. Narrative Velocity
+8. Curiosity and Mystery
+9. Immersive Texture
+10. Relational Warmth
+11. Parasocial / Hangout Appeal
+12. Moral Complexity
+13. Ontological Instability
+14. Informational Utility
+15. Identity and Social Resonance
+
+### Weight Scale:
+For every dimension, output an integer from ${TRAIT_WEIGHT_MIN} to ${TRAIT_WEIGHT_MAX}.
+
+${TRAIT_WEIGHT_MIN} = The prompt gives no reason to care about this trait.
+1 = Barely relevant.
+3 = Somewhat relevant, but not central.
+5 = Important.
+${TRAIT_WEIGHT_MAX} = Dominant; this trait should heavily shape matching.
+
+### Important Rules:
+- Infer weights only from the user's prompt. Do not use user settings, platform filters, media type filters, or previously extracted constraints.
+- Do not assign high weights just because a trait can be inferred indirectly from a genre. Weight only what the user seems to care about in this moment.
+- A trait can be highly important whether the user wants MORE of it or LESS of it. For example, "not scary" makes Distress and Unease important, even though the desired score for Distress should be low.
+- Prefer sparse weights. Most ordinary prompts should have only 2-5 highly weighted traits.
+- Avoid giving every trait a medium weight. If the prompt does not mention or imply a trait, give it 0-2.
+- If the prompt is too vague to infer meaningful trait priorities, return a low-confidence, weak-prior vector rather than equal weights. Use no weights above 3. Slightly prioritize broadly useful entertainment traits such as Hedonic Pleasure, Comfort and Emotional Safety, Narrative Velocity, Immersive Texture, Relational Warmth, Parasocial / Hangout Appeal, and Identity and Social Resonance. Keep specialized traits such as Moral Complexity, Ontological Instability, Informational Utility, and Distress and Unease at 0-1 unless the prompt implies them.
+
+### Output Format:
+Return ONLY valid JSON. Do not include markdown, comments, or conversational text.
+
+Expected JSON Schema:
+{
+  "rationale": "A brief 1-2 sentence explanation of which traits matter most and why.",
+  "weights": [
+    integer, // 1. Cognitive Load
+    integer, // 2. Hedonic Pleasure
+    integer, // 3. Eudaimonic Weight
+    integer, // 4. Affective Arousal
+    integer, // 5. Comfort and Emotional Safety
+    integer, // 6. Distress and Unease
+    integer, // 7. Narrative Velocity
+    integer, // 8. Curiosity and Mystery
+    integer, // 9. Immersive Texture
+    integer, // 10. Relational Warmth
+    integer, // 11. Parasocial / Hangout Appeal
+    integer, // 12. Moral Complexity
+    integer, // 13. Ontological Instability
+    integer, // 14. Informational Utility
+    integer  // 15. Identity and Social Resonance
+  ]
+}`;
 
 const RESPONSE_SCHEMA = {
   type: "object",
@@ -128,7 +272,79 @@ const RESPONSE_SCHEMA = {
       maxItems: TRAIT_COUNT,
       items: {
         type: "integer",
-        enum: SCORE_VALUES,
+        enum: TRAIT_SCORE_VALUES,
+      },
+    },
+  },
+} as const;
+
+const CONSTRAINT_RESPONSE_SCHEMA = {
+  type: "object",
+  additionalProperties: false,
+  required: ["mediaTypes", "timeLimit", "platforms", "languages", "genres", "moods", "exclusions", "otherConstraints"],
+  properties: {
+    mediaTypes: {
+      type: "array",
+      items: {
+        type: "string",
+        enum: ["show", "movie", "podcast", "book"],
+      },
+    },
+    timeLimit: {
+      type: "object",
+      additionalProperties: false,
+      required: ["mentioned", "rawText"],
+      properties: {
+        mentioned: { type: "boolean" },
+        rawText: { type: "string" },
+        minMinutes: { type: "integer", minimum: 0 },
+        maxMinutes: { type: "integer", minimum: 0 },
+      },
+    },
+    platforms: {
+      type: "array",
+      items: { type: "string" },
+    },
+    languages: {
+      type: "array",
+      items: { type: "string" },
+    },
+    genres: {
+      type: "array",
+      items: { type: "string" },
+    },
+    moods: {
+      type: "array",
+      items: { type: "string" },
+    },
+    exclusions: {
+      type: "array",
+      items: { type: "string" },
+    },
+    otherConstraints: {
+      type: "array",
+      items: { type: "string" },
+    },
+  },
+} as const;
+
+const TRAIT_WEIGHT_RESPONSE_SCHEMA = {
+  type: "object",
+  additionalProperties: false,
+  required: ["rationale", "weights"],
+  properties: {
+    rationale: {
+      type: "string",
+      description: "A brief 1-2 sentence explanation of which traits matter most and why.",
+    },
+    weights: {
+      type: "array",
+      description: "Exactly 15 integer weights, in the order defined by the psychometric dimensions.",
+      minItems: TRAIT_COUNT,
+      maxItems: TRAIT_COUNT,
+      items: {
+        type: "integer",
+        enum: TRAIT_WEIGHT_VALUES,
       },
     },
   },
@@ -145,14 +361,27 @@ type GeminiResponse = {
     };
   }[];
   error?: {
+    code?: number;
     message?: string;
+    status?: string;
   };
+};
+
+export type PsychometricTranslationErrorDetails = {
+  model?: string;
+  upstreamStatus?: number;
+  upstreamErrorCode?: number;
+  upstreamErrorStatus?: string;
+  upstreamErrorMessage?: string;
+  responseWasJson?: boolean;
+  stage?: string;
 };
 
 export class PsychometricTranslationError extends Error {
   constructor(
     message: string,
     public readonly status = 500,
+    public readonly details: PsychometricTranslationErrorDetails = {},
   ) {
     super(message);
     this.name = "PsychometricTranslationError";
@@ -174,8 +403,10 @@ export function validatePsychometricTranslation(value: unknown): PsychometricTra
   }
 
   const vector = candidate.vector.map((score) => {
-    if (!Number.isInteger(score) || score < 1 || score > 10) {
-      throw new PsychometricTranslationError("Every trait score must be an integer from 1 to 10.");
+    if (!Number.isInteger(score) || score < TRAIT_SCORE_MIN || score > TRAIT_SCORE_MAX) {
+      throw new PsychometricTranslationError(
+        `Every trait score must be an integer from ${TRAIT_SCORE_MIN} to ${TRAIT_SCORE_MAX}.`,
+      );
     }
     return score;
   }) as TraitVector;
@@ -183,6 +414,97 @@ export function validatePsychometricTranslation(value: unknown): PsychometricTra
   return {
     rationale: candidate.rationale.trim(),
     vector,
+  };
+}
+
+export function validateTraitWeighting(value: unknown): TraitWeighting {
+  if (!value || typeof value !== "object") {
+    throw new PsychometricTranslationError("The trait-weight response was not a JSON object.");
+  }
+
+  const candidate = value as { rationale?: unknown; weights?: unknown };
+  if (typeof candidate.rationale !== "string" || !candidate.rationale.trim()) {
+    throw new PsychometricTranslationError("The trait-weight response did not include a rationale.");
+  }
+
+  if (!Array.isArray(candidate.weights) || candidate.weights.length !== TRAIT_COUNT) {
+    throw new PsychometricTranslationError(`The trait-weight response must include exactly ${TRAIT_COUNT} weights.`);
+  }
+
+  const weights = candidate.weights.map((weight) => {
+    if (!Number.isInteger(weight) || weight < TRAIT_WEIGHT_MIN || weight > TRAIT_WEIGHT_MAX) {
+      throw new PsychometricTranslationError(
+        `Every trait weight must be an integer from ${TRAIT_WEIGHT_MIN} to ${TRAIT_WEIGHT_MAX}.`,
+      );
+    }
+    return weight;
+  }) as TraitWeightsVector;
+
+  return {
+    weightRationale: candidate.rationale.trim(),
+    weights,
+  };
+}
+
+const PROMPT_MEDIA_TYPES = new Set<PromptMediaType>(["show", "movie", "podcast", "book"]);
+
+function cleanStringArray(value: unknown, field: string): string[] {
+  if (!Array.isArray(value)) {
+    throw new PsychometricTranslationError(`The model response did not include a valid ${field} array.`);
+  }
+
+  return value
+    .filter((item): item is string => typeof item === "string")
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function optionalMinuteValue(value: unknown, field: string): number | undefined {
+  if (typeof value === "undefined") return undefined;
+  if (typeof value !== "number" || !Number.isInteger(value) || value < 0) {
+    throw new PsychometricTranslationError(`The model response included an invalid ${field} value.`);
+  }
+  return value;
+}
+
+export function validatePromptConstraints(value: unknown): PromptConstraints {
+  if (!value || typeof value !== "object") {
+    throw new PsychometricTranslationError("The constraint response was not a JSON object.");
+  }
+
+  const candidate = value as Partial<PromptConstraints>;
+  const mediaTypes = cleanStringArray(candidate.mediaTypes, "mediaTypes").filter((item): item is PromptMediaType =>
+    PROMPT_MEDIA_TYPES.has(item as PromptMediaType),
+  );
+
+  const timeLimit = candidate.timeLimit;
+  if (!timeLimit || typeof timeLimit !== "object") {
+    throw new PsychometricTranslationError("The constraint response did not include a valid timeLimit object.");
+  }
+
+  const rawTimeLimit = timeLimit as Partial<PromptTimeLimit>;
+  if (typeof rawTimeLimit.mentioned !== "boolean" || typeof rawTimeLimit.rawText !== "string") {
+    throw new PsychometricTranslationError("The constraint response did not include valid timeLimit fields.");
+  }
+
+  const normalizedTimeLimit: PromptTimeLimit = {
+    mentioned: rawTimeLimit.mentioned,
+    rawText: rawTimeLimit.rawText.trim(),
+  };
+  const minMinutes = optionalMinuteValue(rawTimeLimit.minMinutes, "timeLimit.minMinutes");
+  const maxMinutes = optionalMinuteValue(rawTimeLimit.maxMinutes, "timeLimit.maxMinutes");
+  if (typeof minMinutes !== "undefined") normalizedTimeLimit.minMinutes = minMinutes;
+  if (typeof maxMinutes !== "undefined") normalizedTimeLimit.maxMinutes = maxMinutes;
+
+  return {
+    mediaTypes,
+    timeLimit: normalizedTimeLimit,
+    platforms: cleanStringArray(candidate.platforms, "platforms"),
+    languages: cleanStringArray(candidate.languages, "languages"),
+    genres: cleanStringArray(candidate.genres, "genres"),
+    moods: cleanStringArray(candidate.moods, "moods"),
+    exclusions: cleanStringArray(candidate.exclusions, "exclusions"),
+    otherConstraints: cleanStringArray(candidate.otherConstraints, "otherConstraints"),
   };
 }
 
@@ -218,7 +540,14 @@ function parseModelJson(text: string): unknown {
   }
 }
 
-export async function translatePromptToTraitVector(prompt: string): Promise<PsychometricTranslation> {
+async function requestGeminiJson(
+  prompt: string,
+  systemPrompt: string,
+  responseSchema: object,
+  maxOutputTokens: number,
+  model: string,
+  failureMessage: string,
+): Promise<unknown> {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
     throw new PsychometricTranslationError("GEMINI_API_KEY is not configured.", 503);
@@ -229,7 +558,6 @@ export async function translatePromptToTraitVector(prompt: string): Promise<Psyc
     throw new PsychometricTranslationError("Prompt is required.", 400);
   }
 
-  const model = process.env.GEMINI_TRAIT_MODEL || "gemini-3.5-flash";
   const url = new URL(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`);
   url.searchParams.set("key", apiKey);
 
@@ -240,7 +568,7 @@ export async function translatePromptToTraitVector(prompt: string): Promise<Psyc
     },
     body: JSON.stringify({
       systemInstruction: {
-        parts: [{ text: SYSTEM_PROMPT }],
+        parts: [{ text: systemPrompt }],
       },
       contents: [
         {
@@ -249,16 +577,24 @@ export async function translatePromptToTraitVector(prompt: string): Promise<Psyc
         },
       ],
       generationConfig: {
-        maxOutputTokens: 1400,
+        maxOutputTokens,
         response_mime_type: "application/json",
-        response_json_schema: RESPONSE_SCHEMA,
+        response_json_schema: responseSchema,
       },
     }),
   });
 
   const payload = (await response.json().catch(() => null)) as GeminiResponse | null;
   if (!response.ok) {
-    throw new PsychometricTranslationError(payload?.error?.message || "Gemini trait translation failed.", response.status);
+    throw new PsychometricTranslationError(payload?.error?.message || failureMessage, response.status, {
+      model,
+      upstreamStatus: response.status,
+      upstreamErrorCode: payload?.error?.code,
+      upstreamErrorStatus: payload?.error?.status,
+      upstreamErrorMessage: payload?.error?.message,
+      responseWasJson: Boolean(payload),
+      stage: failureMessage,
+    });
   }
 
   if (!payload) {
@@ -266,7 +602,53 @@ export async function translatePromptToTraitVector(prompt: string): Promise<Psyc
   }
 
   const outputText = extractOutputText(payload);
-  console.log(`[traits] raw model output ${outputText}`);
-  const parsed = parseModelJson(outputText);
+  return parseModelJson(outputText);
+}
+
+export async function translatePromptToTraitVector(prompt: string): Promise<PsychometricTranslation> {
+  const model = process.env.GEMINI_TRAIT_MODEL || "gemini-3.5-flash";
+  const parsed = await requestGeminiJson(prompt, SYSTEM_PROMPT, RESPONSE_SCHEMA, 1400, model, "Gemini trait translation failed.");
+  console.log(`[traits] raw model output ${JSON.stringify(parsed)}`);
   return validatePsychometricTranslation(parsed);
+}
+
+export async function extractPromptConstraints(prompt: string): Promise<PromptConstraints> {
+  const model = process.env.GEMINI_CONSTRAINT_MODEL || process.env.GEMINI_TRAIT_MODEL || "gemini-3.5-flash";
+  const parsed = await requestGeminiJson(
+    prompt,
+    CONSTRAINT_EXTRACTION_PROMPT,
+    CONSTRAINT_RESPONSE_SCHEMA,
+    900,
+    model,
+    "Gemini constraint extraction failed.",
+  );
+  console.log(`[traits] raw constraint output ${JSON.stringify(parsed)}`);
+  return validatePromptConstraints(parsed);
+}
+
+export async function weightPromptTraits(prompt: string): Promise<TraitWeighting> {
+  const model = process.env.GEMINI_TRAIT_WEIGHT_MODEL || process.env.GEMINI_TRAIT_MODEL || "gemini-3.5-flash";
+  const parsed = await requestGeminiJson(
+    prompt,
+    TRAIT_WEIGHT_PROMPT,
+    TRAIT_WEIGHT_RESPONSE_SCHEMA,
+    1200,
+    model,
+    "Gemini trait weighting failed.",
+  );
+  console.log(`[traits] raw trait-weight output ${JSON.stringify(parsed)}`);
+  return validateTraitWeighting(parsed);
+}
+
+export async function analyzePrompt(prompt: string): Promise<PromptAnalysis> {
+  const [translation, constraints, traitWeights] = await Promise.all([
+    translatePromptToTraitVector(prompt),
+    extractPromptConstraints(prompt),
+    weightPromptTraits(prompt),
+  ]);
+  return {
+    ...translation,
+    constraints,
+    traitWeights,
+  };
 }

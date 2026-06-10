@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
+import { canonicalFilterPlatformLabels } from "./platforms";
+import { logItemInteraction, logUsageEvent } from "./usage";
 
 export type MediaType = "show" | "movie" | "podcast" | "book";
 
@@ -14,6 +16,7 @@ export type Recommendation = {
   platforms: string[];
   ratings: { source: string; value: string }[];
   length: string;
+  durationMinutes?: number;
   tags: string[];
   why: string;
   summary: string;
@@ -80,45 +83,90 @@ export function setState(patch: Partial<VibeState> | ((s: VibeState) => Partial<
 }
 
 export function useVibe(): VibeState {
-  const [, force] = useState(0);
-  useEffect(() => {
-    load();
-    const fn = () => force((n) => n + 1);
-    listeners.add(fn);
-    force((n) => n + 1);
-    return () => {
-      listeners.delete(fn);
-    };
-  }, []);
-  return state;
+  return useSyncExternalStore(
+    (onStoreChange) => {
+      load();
+      listeners.add(onStoreChange);
+      return () => {
+        listeners.delete(onStoreChange);
+      };
+    },
+    () => {
+      load();
+      return state;
+    },
+    () => defaults,
+  );
 }
 
 export const actions = {
   signIn(provider: string) {
+    const user = { name: "You", email: `you@${provider}.vibe` };
     setState({
       authed: true,
-      user: { name: "You", email: `you@${provider}.vibe` },
+      user,
+    });
+    logUsageEvent({
+      eventType: "sign_in",
+      userEmail: user.email,
+      metadata: { provider },
     });
   },
   signOut() {
+    const userEmail = state.user?.email ?? null;
     setState({ authed: false, user: null });
+    logUsageEvent({ eventType: "sign_out", userEmail });
   },
   setServices(services: string[]) {
-    setState({ services, onboarded: true });
+    const canonicalServices = canonicalFilterPlatformLabels(services);
+    setState({ services: canonicalServices, onboarded: true });
+    logUsageEvent({
+      eventType: "onboarding_services_set",
+      userEmail: state.user?.email,
+      metadata: { services: canonicalServices },
+    });
   },
   save(rec: Recommendation) {
     setState((s) =>
       s.saved.find((r) => r.id === rec.id) ? {} : { saved: [rec, ...s.saved] },
     );
+    logUsageEvent({
+      eventType: "recommendation_saved",
+      userEmail: state.user?.email,
+      contentId: rec.id,
+      metadata: { title: rec.title, mediaType: rec.type },
+    });
+    logItemInteraction({
+      itemId: rec.id,
+      interactionType: "saved",
+      metadata: { title: rec.title, mediaType: rec.type },
+    });
   },
   unsave(id: string) {
     setState((s) => ({ saved: s.saved.filter((r) => r.id !== id) }));
+    logUsageEvent({
+      eventType: "recommendation_unsaved",
+      userEmail: state.user?.email,
+      contentId: id,
+    });
+    logItemInteraction({ itemId: id, interactionType: "unsaved" });
   },
   markSeen(id: string) {
     setState((s) => (s.seen.includes(id) ? {} : { seen: [...s.seen, id] }));
+    logUsageEvent({
+      eventType: "recommendation_seen",
+      userEmail: state.user?.email,
+      contentId: id,
+    });
+    logItemInteraction({ itemId: id, interactionType: "seen" });
   },
   pushChat(turn: ChatTurn) {
     setState((s) => ({ history: [...s.history, turn] }));
+    logUsageEvent({
+      eventType: "chat_turn_added",
+      userEmail: state.user?.email,
+      metadata: { role: turn.role, text: turn.text },
+    });
   },
   setPrompt(p: string) {
     setState({ lastPrompt: p });
