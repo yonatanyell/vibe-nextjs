@@ -139,7 +139,7 @@ function asTraitWeights(value: unknown) {
   if (
     !Array.isArray(value) ||
     value.length !== 15 ||
-    !value.every((weight) => Number.isInteger(weight) && weight >= 0 && weight <= 6)
+    !value.every((weight) => Number.isInteger(weight) && weight >= 0 && weight <= 7)
   ) {
     return null;
   }
@@ -526,7 +526,7 @@ export async function POST(request: Request) {
 
   const traitWeights = body.traitWeights === undefined ? null : asTraitWeights(body.traitWeights);
   if (body.traitWeights !== undefined && !traitWeights) {
-    return NextResponse.json({ error: "traitWeights must include 15 integer weights from 0 to 6." }, { status: 400 });
+    return NextResponse.json({ error: "traitWeights must include 15 integer weights from 0 to 7." }, { status: 400 });
   }
 
   const supabase = getSupabaseServerClient();
