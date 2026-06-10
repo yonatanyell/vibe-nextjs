@@ -1,0 +1,41 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "verdict",
+    "score",
+    "assessment",
+    "issues",
+    "suggestedChanges"
+  ],
+  "properties": {
+    "verdict": {
+      "type": "string",
+      "enum": [
+        "pass",
+        "minor_issues",
+        "fail"
+      ]
+    },
+    "score": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 10
+    },
+    "assessment": {
+      "type": "string"
+    },
+    "issues": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "suggestedChanges": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

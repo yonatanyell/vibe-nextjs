@@ -1,0 +1,212 @@
+{
+  "reviews": [
+    {
+      "verdict": "minor_issues",
+      "score": 8,
+      "assessment": "The vector captures the core request well: funny/light maps strongly to Hedonic Pleasure, fast maps strongly to Narrative Velocity, and light/not too long reasonably raises Cognitive Load and Comfort/Safety as importance constraints. The main issue is some mild over-weighting of traits not clearly requested, especially Relational Warmth and Parasocial/Hangout Appeal.",
+      "issues": [
+        "Relational Warmth at 3 is not well supported; the user asked for funny and light, not necessarily warm, cozy, or relationship-centered.",
+        "Parasocial / Hangout Appeal at 2 is weakly inferred at best; nothing in the prompt asks for hangout vibes or personality-driven comfort viewing.",
+        "Distress and Unease at 4 is directionally right because 'light' implies avoiding distress, though it could arguably be 5 alongside Comfort if the system treats 'light' as a strong low-distress constraint.",
+        "Affective Arousal at 3 is acceptable but slightly ambiguous: fast and funny may imply energy, but the user did not ask for intense excitement."
+      ],
+      "suggestedChanges": [
+        "Consider lowering Relational Warmth from 3 to 1 or 2.",
+        "Consider lowering Parasocial / Hangout Appeal from 2 to 0 or 1.",
+        "Optionally raise Distress and Unease from 4 to 5 if 'light' is interpreted as a strong exclusion of stressful or upsetting content."
+      ],
+      "id": 1,
+      "prompt": "I want something funny and light that moves fast, ideally not too long.",
+      "weights": [
+        5,
+        7,
+        0,
+        3,
+        5,
+        4,
+        7,
+        1,
+        1,
+        3,
+        2,
+        0,
+        0,
+        0,
+        1
+      ],
+      "weightRationale": "The user seeks fast-paced, lighthearted, and funny content. Therefore, Hedonic Pleasure and Narrative Velocity are highly weighted, while Cognitive Load, Comfort, and Distress are also weighted to ensure the recommendation remains low-stress and easy to consume."
+    },
+    {
+      "verdict": "minor_issues",
+      "score": 8,
+      "assessment": "The core emphasis is right: Eudaimonic Weight, Moral Complexity, and Cognitive Load should dominate for a request that is deep, morally complex, and thought-provoking. Most low weights are reasonable because the user is not asking for comfort, hangout appeal, sensory richness, or entertainment-first pleasure.",
+      "issues": [
+        "Curiosity and Mystery at 4 is defensible but slightly high; the prompt asks for reflection and complexity, not necessarily mystery or puzzle-box engagement.",
+        "Ontological Instability at 3 feels over-weighted. Moral depth can be realist, social, political, or psychological without unstable reality or metaphysics.",
+        "Identity and Social Resonance at 3 is plausible but not directly requested; the prompt does not specifically ask for social relevance, representation, or identity resonance.",
+        "Informational Utility at 2 may be a little high unless the app treats 'gives me a lot to think about' as partly educational; the prompt is more interpretive/philosophical than informational."
+      ],
+      "suggestedChanges": [
+        "Keep Cognitive Load around 5-6, Eudaimonic Weight at 7, and Moral Complexity at 7.",
+        "Consider Curiosity and Mystery around 3 instead of 4.",
+        "Consider Ontological Instability around 1-2 instead of 3.",
+        "Consider Identity and Social Resonance around 1-2 unless the recommender intentionally maps moral reflection to social resonance."
+      ],
+      "id": 2,
+      "prompt": "Recommend a movie or show that is deep, morally complex, and gives me a lot to think about afterward.",
+      "weights": [
+        6,
+        1,
+        7,
+        2,
+        1,
+        3,
+        1,
+        4,
+        1,
+        1,
+        0,
+        7,
+        3,
+        2,
+        3
+      ],
+      "weightRationale": "The user explicitly requests a 'deep' and 'morally complex' experience that leaves them with 'a lot to think about,' which heavily weights Eudaimonic Weight, Moral Complexity, and Cognitive Load."
+    },
+    {
+      "verdict": "pass",
+      "score": 8,
+      "assessment": "The vector correctly identifies Comfort and Emotional Safety and Distress and Unease as dominant because the user explicitly wants comfort and explicitly rejects scary or stressful content. Hedonic Pleasure and Relational Warmth are also appropriately important for a cozy recommendation.",
+      "issues": [
+        "Affective Arousal at 5 is defensible as an importance weight because the app must avoid high-arousal stress/fear, but the rationale should make clear that the desired target is low arousal, not high arousal.",
+        "Parasocial / Hangout Appeal at 3 is plausible but slightly optional; the prompt asks for cozy/comforting, not necessarily hangout-style media.",
+        "Immersive Texture at 2 may be a little low if 'cozy' is interpreted as atmosphere-heavy, though this is not a major problem."
+      ],
+      "suggestedChanges": [
+        "Clarify that Affective Arousal is important for filtering toward low intensity.",
+        "Consider Parasocial / Hangout Appeal at 2 instead of 3 unless the recommender treats cozy comfort as strongly hangout-driven.",
+        "Optionally raise Immersive Texture to 3 if cozy atmosphere is a major matching dimension."
+      ],
+      "id": 3,
+      "prompt": "I need something cozy and comforting tonight, but definitely not scary or stressful.",
+      "weights": [
+        1,
+        5,
+        0,
+        5,
+        7,
+        7,
+        1,
+        1,
+        2,
+        4,
+        3,
+        0,
+        0,
+        0,
+        0
+      ],
+      "weightRationale": "The user is explicitly seeking comfort and avoiding stress or fear, making Comfort and Emotional Safety and Distress and Unease the dominant traits for filtering. Hedonic Pleasure, Affective Arousal, and Relational Warmth are also highly important to ensure a cozy, low-stress experience."
+    },
+    {
+      "verdict": "pass",
+      "score": 9,
+      "assessment": "The vector correctly makes Informational Utility dominant and Hedonic Pleasure very high, with Cognitive Load also important because the user wants learning that feels accessible rather than like homework. The overall prioritization matches the prompt well.",
+      "issues": [
+        "Curiosity and Mystery at 4 is defensible for engaging educational content, but the prompt does not specifically ask for mystery or inquiry-driven material, so it may be slightly high.",
+        "Parasocial / Hangout Appeal at 3 is plausible for entertaining educational content, but it is inferred rather than directly requested."
+      ],
+      "suggestedChanges": [
+        "Consider lowering Curiosity and Mystery from 4 to 3 unless the app interprets 'learn things' as discovery-oriented content.",
+        "Consider lowering Parasocial / Hangout Appeal from 3 to 2 if host-driven comfort is not part of the recommendation strategy."
+      ],
+      "id": 4,
+      "prompt": "Find me something educational but still entertaining, like I learn things without feeling like I’m watching homework.",
+      "weights": [
+        5,
+        6,
+        2,
+        1,
+        2,
+        0,
+        2,
+        4,
+        1,
+        2,
+        3,
+        0,
+        0,
+        7,
+        1
+      ],
+      "weightRationale": "The user seeks educational content that is highly engaging, making Informational Utility and Hedonic Pleasure the primary drivers, while Cognitive Load is also heavily weighted to ensure the material feels accessible and light rather than academic."
+    },
+    {
+      "verdict": "minor_issues",
+      "score": 8,
+      "assessment": "The vector captures the central request well: Immersive Texture should be dominant for “immersive world” and “get lost in.” Curiosity/Mystery and Narrative Velocity are reasonable supporting traits for sustained multi-evening engagement, though the prompt does not explicitly ask for mystery or plot momentum.",
+      "issues": [
+        "Parasocial / Hangout Appeal at 4 is somewhat over-weighted; the user asks for a world, not specifically characters, companionship, or hangout vibes.",
+        "Curiosity and Mystery at 5 is plausible but slightly inferential; immersive worldbuilding can matter without a mystery/exploration hook.",
+        "Narrative Velocity at 4 is acceptable but could be a bit lower if the emphasis is atmosphere/world immersion rather than pace."
+      ],
+      "suggestedChanges": [
+        "Consider lowering Parasocial / Hangout Appeal from 4 to 2 or 3.",
+        "Consider Curiosity and Mystery at 4 instead of 5 unless the app interprets “get lost in” as exploration-driven engagement.",
+        "Keep Immersive Texture at 7."
+      ],
+      "id": 5,
+      "prompt": "I’m looking for a really immersive world I can get lost in for a few evenings.",
+      "weights": [
+        2,
+        3,
+        1,
+        2,
+        2,
+        1,
+        4,
+        5,
+        7,
+        2,
+        4,
+        1,
+        1,
+        1,
+        1
+      ],
+      "weightRationale": "The user specifically requests an immersive world to get lost in over several evenings, making Immersive Texture the dominant trait, while Curiosity and Mystery and Parasocial / Hangout Appeal are highly weighted to support deep exploration and multi-session engagement."
+    },
+    {
+      "verdict": "pass",
+      "score": 9,
+      "assessment": "The vector correctly makes Curiosity and Mystery dominant and Cognitive Load highly important, which matches the core request: a mystery that sustains uncertainty without becoming hard to follow. Secondary Affective Arousal is reasonable for suspense/guessing, and most unrelated traits are appropriately near zero.",
+      "issues": [
+        "Narrative Velocity at 2 is acceptable but could arguably be 3, since pacing often affects whether a mystery keeps momentum and remains engaging.",
+        "Distress and Unease at 1 is fine; the prompt does not ask for 'not scary' or emotional safety, only clarity."
+      ],
+      "suggestedChanges": [
+        "Optionally raise Narrative Velocity from 2 to 3 if the system treats 'keeps me guessing' as partly dependent on pacing."
+      ],
+      "id": 6,
+      "prompt": "Give me a mystery that actually keeps me guessing, but doesn’t get too confusing.",
+      "weights": [
+        6,
+        1,
+        0,
+        3,
+        1,
+        1,
+        2,
+        7,
+        1,
+        0,
+        0,
+        1,
+        1,
+        0,
+        0
+      ],
+      "weightRationale": "The user explicitly demands a compelling mystery ('keeps me guessing'), making Curiosity and Mystery the dominant trait, while also placing a strict limit on complexity ('not too confusing'), which requires a high weight on Cognitive Load."
+    }
+  ]
+}

@@ -5,6 +5,7 @@ import { useEffect, useMemo } from "react";
 import { LogOut, Pencil } from "lucide-react";
 import { BottomNav } from "@/components/BottomNav";
 import { VibeHeader } from "@/components/VibeHeader";
+import { canonicalFilterPlatformLabels } from "@/lib/platforms";
 import { actions, useVibe } from "@/lib/store";
 
 const BASE_TRAITS = [
@@ -17,6 +18,7 @@ const BASE_TRAITS = [
 export default function TastePage() {
   const router = useRouter();
   const vibe = useVibe();
+  const services = useMemo(() => canonicalFilterPlatformLabels(vibe.services), [vibe.services]);
 
   useEffect(() => {
     if (!vibe.authed) router.replace("/");
@@ -31,7 +33,7 @@ export default function TastePage() {
   const stats = [
     { label: "Saved", value: vibe.saved.length },
     { label: "Marked seen", value: vibe.seen.length },
-    { label: "Services", value: vibe.services.length },
+    { label: "Services", value: services.length },
   ];
 
   return (
@@ -111,10 +113,10 @@ export default function TastePage() {
             </button>
           </div>
           <div className="mt-3 flex flex-wrap gap-1.5">
-            {vibe.services.length === 0 ? (
-              <p className="text-sm text-muted-foreground">None yet - add a few to filter out things you can't watch.</p>
+            {services.length === 0 ? (
+              <p className="text-sm text-muted-foreground">None yet - add a few to filter out things you can&apos;t watch.</p>
             ) : (
-              vibe.services.map((service) => (
+              services.map((service) => (
                 <span key={service} className="rounded-md bg-foreground/10 px-2.5 py-1 text-[11.5px] font-medium text-foreground/90">
                   {service}
                 </span>

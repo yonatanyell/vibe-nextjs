@@ -40,7 +40,7 @@ export default function AuthLanding() {
 
         <div className="mt-16 animate-in-up" style={{ animationDelay: "80ms" }}>
           <h1 className="font-display text-[2.4rem] font-semibold leading-[1.1] tracking-tight">
-            What's the
+            What&apos;s the
             <br />
             <span className="bg-gradient-to-r from-primary via-primary-glow to-accent bg-clip-text text-transparent">
               right thing
@@ -73,7 +73,7 @@ export default function AuthLanding() {
             Or sign in with email
           </button>
           <p className="pt-2 text-center text-[11px] leading-relaxed text-muted-foreground/80">
-            By continuing you agree to Vibe's Terms & Privacy.
+            By continuing you agree to Vibe&apos;s Terms & Privacy.
           </p>
         </div>
       </div>
