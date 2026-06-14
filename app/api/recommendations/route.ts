@@ -11,6 +11,9 @@ import {
 import { getSupabaseServerClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
+const TRAIT_COUNT = 15;
+const TRAIT_WEIGHT_MIN = 0;
+const TRAIT_WEIGHT_MAX = 5;
 
 type RecommendationRequestBody = {
   prompt?: unknown;
@@ -138,8 +141,8 @@ function asTraitVector(value: unknown) {
 function asTraitWeights(value: unknown) {
   if (
     !Array.isArray(value) ||
-    value.length !== 15 ||
-    !value.every((weight) => Number.isInteger(weight) && weight >= 0 && weight <= 7)
+    value.length !== TRAIT_COUNT ||
+    !value.every((weight) => Number.isInteger(weight) && weight >= TRAIT_WEIGHT_MIN && weight <= TRAIT_WEIGHT_MAX)
   ) {
     return null;
   }
@@ -526,7 +529,10 @@ export async function POST(request: Request) {
 
   const traitWeights = body.traitWeights === undefined ? null : asTraitWeights(body.traitWeights);
   if (body.traitWeights !== undefined && !traitWeights) {
-    return NextResponse.json({ error: "traitWeights must include 15 integer weights from 0 to 7." }, { status: 400 });
+    return NextResponse.json(
+      { error: `traitWeights must include ${TRAIT_COUNT} integer weights from ${TRAIT_WEIGHT_MIN} to ${TRAIT_WEIGHT_MAX}.` },
+      { status: 400 },
+    );
   }
 
   const supabase = getSupabaseServerClient();

@@ -46,8 +46,8 @@ const {
 assert.equal(TRAIT_COUNT, 15);
 assert.deepEqual(Array.from(TRAIT_SCORE_VALUES), [1, 2, 3, 4, 5, 6, 7]);
 assert.equal(TRAIT_WEIGHT_MIN, 0);
-assert.equal(TRAIT_WEIGHT_MAX, 7);
-assert.deepEqual(Array.from(TRAIT_WEIGHT_VALUES), [0, 1, 2, 3, 4, 5, 6, 7]);
+assert.equal(TRAIT_WEIGHT_MAX, 5);
+assert.deepEqual(Array.from(TRAIT_WEIGHT_VALUES), [0, 1, 2, 3, 4, 5]);
 
 const validVector = Array.from({ length: TRAIT_COUNT }, () => TRAIT_SCORE_MAX);
 const validatedVector = validatePsychometricTranslation({
@@ -80,7 +80,7 @@ for (const outOfRangeScore of [8, 9, 10]) {
   );
 }
 
-for (const outOfRangeWeight of [-1, 8, 9]) {
+for (const outOfRangeWeight of [-1, 6, 7]) {
   const weights = Array.from({ length: TRAIT_COUNT }, () => TRAIT_WEIGHT_MIN);
   weights[0] = outOfRangeWeight;
 
