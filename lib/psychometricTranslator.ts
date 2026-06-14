@@ -3,8 +3,8 @@ export const TRAIT_SCORE_MIN = 1;
 export const TRAIT_SCORE_MAX = 7;
 export const TRAIT_SCORE_VALUES = [1, 2, 3, 4, 5, 6, 7] as const;
 export const TRAIT_WEIGHT_MIN = 0;
-export const TRAIT_WEIGHT_MAX = 7;
-export const TRAIT_WEIGHT_VALUES = [0, 1, 2, 3, 4, 5, 6, 7] as const;
+export const TRAIT_WEIGHT_MAX = 5;
+export const TRAIT_WEIGHT_VALUES = [0, 1, 2, 3, 4, 5] as const;
 
 export type TraitScore = (typeof TRAIT_SCORE_VALUES)[number];
 export type TraitWeight = (typeof TRAIT_WEIGHT_VALUES)[number];

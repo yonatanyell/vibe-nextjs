@@ -580,7 +580,7 @@ const weightedCosineRanksByImportantTraits = await runFilteringScenario({
       vector: [7, 1, 3, 4, 4, 2, 5, 3, 4, 3, 3, 2, 2, 2, 3],
     },
     weights: {
-      weights: [6, 6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      weights: [5, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     },
     constraints: {
       mediaTypes: ["movie"],
