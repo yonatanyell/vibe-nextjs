@@ -17,6 +17,14 @@ create table if not exists public.all_items_metadata (
   official_artwork_url text,
   apple_podcasts_episode_url text,
   spotify_episode_url text,
+  podcast_index_trend_score numeric,
+  podcast_index_episode_count numeric,
+  podcast_index_latest_episode_timestamp numeric,
+  tmdb_popularity numeric,
+  tmdb_vote_average numeric,
+  tmdb_vote_count numeric,
+  watchmode_popularity_percentile numeric,
+  watchmode_relevance_percentile numeric,
   imdb_rating text,
   rotten_tomatoes_rating text,
   year text,
@@ -47,6 +55,12 @@ create table if not exists public.all_items_metadata (
   publication_year text,
   israel_accessibility_channels text,
   original_language text,
+  google_books_average_rating numeric,
+  google_books_ratings_count numeric,
+  open_library_average_rating numeric,
+  open_library_ratings_count numeric,
+  open_library_edition_count numeric,
+  open_library_availability_score numeric,
   goodreads_rating text,
   amazon_rating text,
   storygraph_rating text,
@@ -88,6 +102,22 @@ create table if not exists public.all_items_traits_scores (
 alter table public.all_items_traits_scores
   add column if not exists duration_minutes integer,
   add column if not exists platform_keys text[] not null default '{}';
+
+alter table public.all_items_metadata
+  add column if not exists tmdb_popularity numeric,
+  add column if not exists tmdb_vote_average numeric,
+  add column if not exists tmdb_vote_count numeric,
+  add column if not exists watchmode_popularity_percentile numeric,
+  add column if not exists watchmode_relevance_percentile numeric,
+  add column if not exists podcast_index_trend_score numeric,
+  add column if not exists podcast_index_episode_count numeric,
+  add column if not exists podcast_index_latest_episode_timestamp numeric,
+  add column if not exists google_books_average_rating numeric,
+  add column if not exists google_books_ratings_count numeric,
+  add column if not exists open_library_average_rating numeric,
+  add column if not exists open_library_ratings_count numeric,
+  add column if not exists open_library_edition_count numeric,
+  add column if not exists open_library_availability_score numeric;
 
 create index if not exists all_items_metadata_source_file_idx on public.all_items_metadata (source_file);
 create index if not exists all_items_traits_scores_source_type_idx on public.all_items_traits_scores (source_type);

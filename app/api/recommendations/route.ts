@@ -8,6 +8,37 @@ import {
   sourceTypeForMediaType,
   type SourceType,
 } from "@/lib/platforms";
+import {
+  BOOK_GLOBAL_AVERAGE,
+  GOOGLE_BOOKS_MIN_VOTES,
+  GOOGLE_BOOKS_QUALITY_WEIGHT,
+  NEUTRAL_QUALITY_SCORE,
+  OPEN_LIBRARY_MIN_VOTES,
+  OPEN_LIBRARY_QUALITY_WEIGHT,
+  TMDB_MOVIE_GLOBAL_AVERAGE,
+  TMDB_MOVIE_MIN_VOTES,
+  TMDB_TV_GLOBAL_AVERAGE,
+  TMDB_TV_MIN_VOTES,
+} from "@/lib/qualityScore";
+import {
+  BOOK_FRESHNESS_HALF_LIFE_DAYS,
+  FRESHNESS_SCORE_WEIGHT,
+  GOOGLE_BOOKS_RATINGS_COUNT_WEIGHT,
+  MOVIE_FRESHNESS_HALF_LIFE_DAYS,
+  OPEN_LIBRARY_AVAILABILITY_WEIGHT,
+  OPEN_LIBRARY_EDITION_COUNT_WEIGHT,
+  PODCAST_FRESHNESS_HALF_LIFE_DAYS,
+  PODCAST_INDEX_EPISODE_COUNT_WEIGHT,
+  PODCAST_INDEX_TREND_SCORE_WEIGHT,
+  POPULARITY_SCORE_WEIGHT,
+  PSYCHOLOGICAL_FIT_WEIGHT,
+  QUALITY_SCORE_WEIGHT,
+  rerankByPopularity,
+  TMDB_POPULARITY_WEIGHT,
+  TV_FRESHNESS_HALF_LIFE_DAYS,
+  WATCHMODE_POPULARITY_WEIGHT,
+  WATCHMODE_RELEVANCE_WEIGHT,
+} from "@/lib/popularityScore";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
@@ -72,6 +103,14 @@ type MetadataRow = {
   official_artwork_url: string | null;
   apple_podcasts_episode_url: string | null;
   spotify_episode_url: string | null;
+  podcast_index_trend_score: string | number | null;
+  podcast_index_episode_count: string | number | null;
+  podcast_index_latest_episode_timestamp: string | number | null;
+  tmdb_popularity: string | number | null;
+  tmdb_vote_average: string | number | null;
+  tmdb_vote_count: string | number | null;
+  watchmode_popularity_percentile: string | number | null;
+  watchmode_relevance_percentile: string | number | null;
   imdb_rating: string | null;
   rotten_tomatoes_rating: string | null;
   year: string | null;
@@ -97,6 +136,12 @@ type MetadataRow = {
   author: string | null;
   publication_year: string | null;
   israel_accessibility_channels: string | null;
+  google_books_average_rating: string | number | null;
+  google_books_ratings_count: string | number | null;
+  open_library_average_rating: string | number | null;
+  open_library_ratings_count: string | number | null;
+  open_library_edition_count: string | number | null;
+  open_library_availability_score: string | number | null;
   goodreads_rating: string | null;
   amazon_rating: string | null;
   storygraph_rating: string | null;
@@ -602,8 +647,62 @@ export async function POST(request: Request) {
   }
 
   const metadataById = metadataResult.metadataById;
-  const recommendations = matchRows
-    .map((match, index) => {
+  const rerankedCandidates = rerankByPopularity(matchRows, metadataById);
+  console.log(
+    `[recommendations] popularity rerank ${JSON.stringify({
+      prompt,
+      candidateItems: matchRows.length,
+      rerankedItems: rerankedCandidates.length,
+      weights: {
+        psychologicalFit: PSYCHOLOGICAL_FIT_WEIGHT,
+        quality: QUALITY_SCORE_WEIGHT,
+        popularity: POPULARITY_SCORE_WEIGHT,
+        freshness: FRESHNESS_SCORE_WEIGHT,
+        tmdbPopularity: TMDB_POPULARITY_WEIGHT,
+        watchmodePopularity: WATCHMODE_POPULARITY_WEIGHT,
+        watchmodeRelevance: WATCHMODE_RELEVANCE_WEIGHT,
+        googleBooksRatingsCount: GOOGLE_BOOKS_RATINGS_COUNT_WEIGHT,
+        openLibraryEditionCount: OPEN_LIBRARY_EDITION_COUNT_WEIGHT,
+        openLibraryAvailability: OPEN_LIBRARY_AVAILABILITY_WEIGHT,
+        podcastIndexTrendScore: PODCAST_INDEX_TREND_SCORE_WEIGHT,
+        podcastIndexEpisodeCount: PODCAST_INDEX_EPISODE_COUNT_WEIGHT,
+        podcastFreshnessHalfLifeDays: PODCAST_FRESHNESS_HALF_LIFE_DAYS,
+        movieFreshnessHalfLifeDays: MOVIE_FRESHNESS_HALF_LIFE_DAYS,
+        tvFreshnessHalfLifeDays: TV_FRESHNESS_HALF_LIFE_DAYS,
+        bookFreshnessHalfLifeDays: BOOK_FRESHNESS_HALF_LIFE_DAYS,
+        qualitySignals: {
+          tmdbMovieGlobalAverage: TMDB_MOVIE_GLOBAL_AVERAGE,
+          tmdbTvGlobalAverage: TMDB_TV_GLOBAL_AVERAGE,
+          tmdbMovieMinVotes: TMDB_MOVIE_MIN_VOTES,
+          tmdbTvMinVotes: TMDB_TV_MIN_VOTES,
+          bookGlobalAverage: BOOK_GLOBAL_AVERAGE,
+          googleBooksMinVotes: GOOGLE_BOOKS_MIN_VOTES,
+          openLibraryMinVotes: OPEN_LIBRARY_MIN_VOTES,
+          googleBooksQuality: GOOGLE_BOOKS_QUALITY_WEIGHT,
+          openLibraryQuality: OPEN_LIBRARY_QUALITY_WEIGHT,
+          neutralQualityScore: NEUTRAL_QUALITY_SCORE,
+        },
+      },
+      candidates: rerankedCandidates.slice(0, limit).map((candidate, index) => ({
+        rank: index + 1,
+        itemId: candidate.match.item_id,
+        sourceType: candidate.match.source_type,
+        title: candidate.match.title,
+        similarity: Number(candidate.match.similarity.toFixed(4)),
+        popularityScore:
+          candidate.popularityScore === null ? null : Number(candidate.popularityScore.toFixed(4)),
+        freshnessScore:
+          candidate.freshnessScore === null ? null : Number(candidate.freshnessScore.toFixed(4)),
+        qualityScore:
+          candidate.qualityScore === null ? null : Number(candidate.qualityScore.toFixed(4)),
+        qualityScoreUsed: Number(candidate.qualityScoreUsed.toFixed(4)),
+        finalScore: Number(candidate.finalScore.toFixed(4)),
+      })),
+    })}`,
+  );
+
+  const recommendations = rerankedCandidates
+    .map(({ match }, index) => {
       const meta = metadataById.get(match.item_id);
       return meta ? toRecommendation(match, meta, index) : null;
     })
@@ -617,6 +716,15 @@ export async function POST(request: Request) {
     diagnostics: {
       hardFilteredItems: filteredResult?.filteredCount,
       candidateItems: matchRows.length,
+      popularityRerankedItems: rerankedCandidates.length,
+      scoringSignals: rerankedCandidates.slice(0, limit).map((candidate) => ({
+        itemId: candidate.match.item_id,
+        sourceType: candidate.match.source_type,
+        popularityScore: candidate.popularityScore,
+        freshnessScore: candidate.freshnessScore,
+        qualityScore: candidate.qualityScore,
+        qualityScoreUsed: candidate.qualityScoreUsed,
+      })),
     },
   });
 }

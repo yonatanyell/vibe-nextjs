@@ -20,6 +20,10 @@ const env = Object.fromEntries(
 
 const supabaseUrl = env.NEXT_PUBLIC_SUPABASE_URL;
 const serviceKey = env.SUPABASE_SERVICE_ROLE_KEY;
+const metadataCsvPath =
+  process.env.MVP_METADATA_CSV || env.MVP_METADATA_CSV || path.join(rootDir, "First MVP/New 30/all_items_with_item_ids.csv");
+const traitScoresCsvPath =
+  process.env.MVP_TRAIT_SCORES_CSV || env.MVP_TRAIT_SCORES_CSV || path.join(rootDir, "First MVP/New 30/mvp_1200_trait_scores.csv");
 
 if (!supabaseUrl || !serviceKey) {
   throw new Error("NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be set in .env.");
@@ -87,6 +91,13 @@ function optionalInt(value) {
   if (trimmed === null) return null;
   const match = trimmed.match(/\d+/);
   const parsed = match ? Number.parseInt(match[0], 10) : Number.NaN;
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function optionalNumber(value) {
+  const trimmed = blankToNull(value);
+  if (trimmed === null) return null;
+  const parsed = Number.parseFloat(trimmed.replace(/,/g, ""));
   return Number.isFinite(parsed) ? parsed : null;
 }
 
@@ -197,7 +208,7 @@ async function upsertInBatches(table, rows) {
 }
 
 const allItemsRows = parseCsv(
-  fs.readFileSync(path.join(rootDir, "First MVP/New 30/all_items_with_item_ids.csv"), "utf8"),
+  fs.readFileSync(metadataCsvPath, "utf8"),
 ).map((row) => ({
   item_id: row.item_id,
   source_file: blankToNull(row.source_file),
@@ -215,6 +226,23 @@ const allItemsRows = parseCsv(
   official_artwork_url: blankToNull(row.official_artwork_url),
   apple_podcasts_episode_url: blankToNull(row.apple_podcasts_episode_url),
   spotify_episode_url: blankToNull(row.spotify_episode_url),
+  podcast_index_trend_score: optionalNumber(row.podcast_index_trend_score || row.trendScore),
+  podcast_index_episode_count: optionalNumber(row.podcast_index_episode_count || row.episodeCount),
+  podcast_index_latest_episode_timestamp: optionalNumber(
+    row.podcast_index_latest_episode_timestamp ||
+      row.newestItemPublishTime ||
+      row.newestItemPubdate ||
+      row.lastUpdateTime,
+  ),
+  tmdb_popularity: optionalNumber(row.tmdb_popularity || row.TMDB_popularity),
+  tmdb_vote_average: optionalNumber(row.tmdb_vote_average || row.TMDB_vote_average || row.vote_average),
+  tmdb_vote_count: optionalNumber(row.tmdb_vote_count || row.TMDB_vote_count || row.vote_count),
+  watchmode_popularity_percentile: optionalNumber(
+    row.watchmode_popularity_percentile || row.popularity_percentile || row.popularity_score,
+  ),
+  watchmode_relevance_percentile: optionalNumber(
+    row.watchmode_relevance_percentile || row.relevance_percentile || row.relevance_score,
+  ),
   imdb_rating: blankToNull(row.IMDB_rating),
   rotten_tomatoes_rating: blankToNull(row.Rotten_Tomatoes_rating),
   year: blankToNull(row.year),
@@ -245,6 +273,24 @@ const allItemsRows = parseCsv(
   publication_year: blankToNull(row.publication_year),
   israel_accessibility_channels: blankToNull(row.israel_accessibility_channels),
   original_language: blankToNull(row.original_language),
+  google_books_average_rating: optionalNumber(
+    row.google_books_average_rating || row.google_books_rating || row.google_average_rating,
+  ),
+  google_books_ratings_count: optionalNumber(
+    row.google_books_ratings_count || row.google_books_ratingsCount || row.ratingsCount,
+  ),
+  open_library_average_rating: optionalNumber(
+    row.open_library_average_rating || row.open_library_rating || row.openlibrary_average_rating,
+  ),
+  open_library_ratings_count: optionalNumber(
+    row.open_library_ratings_count || row.open_library_rating_count || row.openlibrary_ratings_count,
+  ),
+  open_library_edition_count: optionalNumber(
+    row.open_library_edition_count || row.openlibrary_edition_count || row.edition_count,
+  ),
+  open_library_availability_score: optionalNumber(
+    row.open_library_availability_score || row.openlibrary_availability_score || row.availability_score,
+  ),
   goodreads_rating: blankToNull(row.goodreads_rating),
   amazon_rating: blankToNull(row.Amazon_rating),
   storygraph_rating: blankToNull(row.storygraph_rating),
@@ -275,7 +321,7 @@ const scoreColumns = [
 ];
 
 const traitScoreRows = parseCsv(
-  fs.readFileSync(path.join(rootDir, "First MVP/New 30/mvp_1200_trait_scores.csv"), "utf8"),
+  fs.readFileSync(traitScoresCsvPath, "utf8"),
 ).map((row) => {
   const scores = scoreColumns.map(([source]) => requiredScore(row[source], row.item_id, source));
   const meta = metadataByItemId.get(row.item_id);

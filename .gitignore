@@ -5,3 +5,6 @@ tsconfig.tsbuildinfo
 .env*.local
 .env
 scripts/
+!scripts/
+scripts/*
+!scripts/enrich_podcast_index_popularity.mjs
