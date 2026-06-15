@@ -30,6 +30,13 @@ function loadCommonJsModule(filePath, sandboxExtras = {}) {
 }
 
 const platforms = loadCommonJsModule(path.resolve("lib/platforms.ts")).exports;
+const qualityScore = loadCommonJsModule(path.resolve("lib/qualityScore.ts")).exports;
+const popularityScore = loadCommonJsModule(path.resolve("lib/popularityScore.ts"), {
+  require: (specifier) => {
+    if (specifier === "./qualityScore") return qualityScore;
+    throw new Error(`Unexpected module import in popularity score dependency: ${specifier}`);
+  },
+}).exports;
 
 const traitColumns = [
   "cognitive_load",
@@ -241,6 +248,14 @@ const recommendationsRoute = loadCommonJsModule(path.resolve("app/api/recommenda
       return platforms;
     }
 
+    if (specifier === "@/lib/qualityScore") {
+      return qualityScore;
+    }
+
+    if (specifier === "@/lib/popularityScore") {
+      return popularityScore;
+    }
+
     throw new Error(`Unexpected module import in filtering E2E test: ${specifier}`);
   },
 }).exports;
@@ -377,6 +392,7 @@ const catalogMetadataRows = [
     host_or_key_guest: "Host",
     approximate_duration_minutes: 42,
     spotify_episode_url: "https://spotify.example/episode",
+    podcast_index_latest_episode_timestamp: Math.floor(Date.now() / 1000),
   }),
   metadataRow("book_kindle", {
     book_title: "Kindle Book",

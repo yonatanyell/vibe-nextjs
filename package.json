@@ -9,8 +9,11 @@
     "build:israel-catalog": "node scripts/build_streaming_israel_catalog.mjs",
     "build:external-ranked-israel-catalog": "node scripts/build_external_ranked_israel_catalog.mjs",
     "build:justwatch-israel-catalog": "node scripts/build_justwatch_israel_catalog.mjs",
+    "enrich:podcast-index": "node scripts/enrich_podcast_index_popularity.mjs",
     "import:mvp-csv": "node scripts/import_mvp_csv_tables.mjs",
-    "test": "node tests/psychometric-scale-regression.mjs && node tests/constraint-resolution-regression.mjs && node tests/filtering-e2e.mjs",
+    "test": "node tests/psychometric-scale-regression.mjs && node tests/constraint-resolution-regression.mjs && node tests/quality-score-regression.mjs && node tests/popularity-score-regression.mjs && node tests/filtering-e2e.mjs",
+    "test:popularity-score": "node tests/popularity-score-regression.mjs",
+    "test:quality-score": "node tests/quality-score-regression.mjs",
     "test:psychometric-scale": "node tests/psychometric-scale-regression.mjs",
     "lint": "eslint ."
   },
