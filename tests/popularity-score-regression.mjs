@@ -77,7 +77,7 @@ const closeTo = (actual, expected, message) => {
   assert.ok(Math.abs(actual - expected) < 1e-10, `${message}: expected ${expected}, received ${actual}`);
 };
 
-assert.equal(POPULARITY_RERANK_COUNT, 10);
+assert.equal(POPULARITY_RERANK_COUNT, 15);
 closeTo(
   PSYCHOLOGICAL_FIT_WEIGHT + QUALITY_SCORE_WEIGHT + POPULARITY_SCORE_WEIGHT + FRESHNESS_SCORE_WEIGHT,
   1,

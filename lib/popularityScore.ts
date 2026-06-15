@@ -1,7 +1,7 @@
 import type { SourceType } from "./platforms";
 import { qualityScoreFor, qualityScoreUsedForScoring } from "./qualityScore";
 
-export const POPULARITY_RERANK_COUNT = 10;
+export const POPULARITY_RERANK_COUNT = 15;
 export const PSYCHOLOGICAL_FIT_WEIGHT = 0.75;
 export const QUALITY_SCORE_WEIGHT = 0.1;
 export const POPULARITY_SCORE_WEIGHT = 0.1;
